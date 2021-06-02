@@ -267,6 +267,10 @@ public:
      * values of the top cards in every pile. */
     int currentScore() const;
 
+    int numofTurns() const;
+
+    int scoreChart_[5];
+    int misdiscard_;
 
     /*================= MUTATORS =============================*/
 
@@ -334,6 +338,8 @@ protected:
     std::vector<Card> discards_;
     int hintStonesRemaining_;
     int mulligansRemaining_;
+    int numofTurns_;
+    
     /* Basically-hidden state */
     std::vector<std::vector<Card> > hands_;
     std::vector<Card> deck_;

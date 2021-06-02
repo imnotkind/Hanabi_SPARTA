@@ -241,6 +241,11 @@ int Server::runGame(std::vector<Bot*> players, const std::vector<Card>& stackedD
     mulligansRemaining_ = NUMMULLIGANS;
     hintStonesRemaining_ = NUMHINTS;
     finalCountdown_ = 0;
+    numofTurns_ = 0;
+    for (int i=0; i<5; i++){
+        scoreChart_[i] = 0;
+    }
+    misdiscard_ = 0;
 
     /* Shuffle the deck. */
     if (!stackedDeck.empty()) {
@@ -309,6 +314,7 @@ int Server::runToCompletion() {
     activePlayer_ = (activePlayer_ + 1) % numPlayers_;
     assert(0 <= finalCountdown_ && finalCountdown_ <= numPlayers_);
     if (deck_.empty()) finalCountdown_ += 1;
+    numofTurns_ += 1;
   }
 
   return this->currentScore();
@@ -426,6 +432,11 @@ int Server::finalCountdown() const
   return finalCountdown_;
 }
 
+int Server::numofTurns() const
+{
+    return numofTurns_;
+}
+
 void Server::pleaseDiscard(int index)
 {
     assert(0 <= activePlayer_ && activePlayer_ < numPlayers_);
@@ -447,6 +458,13 @@ void Server::pleaseDiscard(int index)
     }
     observingPlayer_ = oldObservingPlayer;
     activeCardIsObservable_ = false;
+
+
+    /* Check if it was playable card*/
+    Pile &pile = piles_[(int)discardedCard.color];
+    if (pile.nextValueIs(discardedCard.value)) {
+        misdiscard_ += 1;
+    }
 
     /* Discard the selected card. */
     discards_.push_back(discardedCard);
@@ -509,6 +527,7 @@ void Server::pleasePlay(int index)
             /* Successfully playing a 5 regains a hint stone. */
             regainHintStoneIfPossible_();
         }
+        scoreChart_[activePlayer_] += 1;
     } else {
         /* The card was unplayable! */
         if (log_) {

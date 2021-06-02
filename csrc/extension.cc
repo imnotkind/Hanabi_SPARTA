@@ -110,6 +110,9 @@ struct Statistics {
     int totalScore;
     int scoreDistribution[26];
     int mulligansUsed[4];
+    int totalturns;
+    int totalmaxmindiff;
+    int totalmisdiscard;
 };
 
 static void dump_stats(std::string botname, Statistics stats)
@@ -129,6 +132,14 @@ static void dump_stats(std::string botname, Statistics stats)
                   << "%); 2 (" << 100*(stats.mulligansUsed[2] / dgames)
                   << "%); 3 (" << 100*(stats.mulligansUsed[3] / dgames) << "%).\n";
     }
+    
+    std::cout << "mulligan expectation" <<  (0.0 * (stats.mulligansUsed[0] / dgames) + 1.0 * (stats.mulligansUsed[1] / dgames) + 2.0 * (stats.mulligansUsed[2] / dgames) + 3.0 * (stats.mulligansUsed[3] / dgames))
+      << "% \n.";
+    std::cout << "used turns : " << (stats.totalturns / dgames) << " turns per game. \n";
+
+    std::cout << "max - min score : " << (stats.totalmaxmindiff / dgames) << ". \n";
+
+    std::cout << "mis-discard : " << (stats.totalmisdiscard / dgames) << ". \n";
 }
 
 void eval_bot(
@@ -168,6 +179,23 @@ void eval_bot(
         stats.totalScore += score;
         stats.scoreDistribution[score] += 1;
         stats.mulligansUsed[server.mulligansUsed()] += 1;
+        stats.totalturns += server.numofTurns();
+
+        int max_ = 0;
+        int min_ = 0;
+        for (int i=0; i<players; i++){
+          int k = server.scoreChart_[i];
+          if(max_ < k){
+            max_ = k;
+          }
+          if(min_ > k){
+            min_ = k;
+          }
+        }
+        stats.totalmaxmindiff += max_ - min_;
+
+        stats.totalmisdiscard += server.misdiscard_;
+        
 
         if (i % log_every == 0) {
           dump_stats(botname, stats);
